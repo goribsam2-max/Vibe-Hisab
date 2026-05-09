@@ -56,6 +56,10 @@ export default function Login() {
         }
       }
 
+      if (err.code === 'auth/operation-not-allowed') {
+        toast.error('Firebase Console থেকে Email/Password Authentication চালু করতে হবে।');
+        return;
+      }
       toast.error('ভুল মোবাইল নাম্বার বা পাসওয়ার্ড। দয়া করে আবার চেষ্টা করুন।');
     } finally {
       setLoading(false);

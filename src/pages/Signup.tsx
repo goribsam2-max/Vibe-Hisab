@@ -71,6 +71,8 @@ export default function Signup() {
         errorMsg = 'পাসওয়ার্ড অত্যন্ত দুর্বল। কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন।';
       } else if (err.code === 'auth/invalid-email') {
         errorMsg = 'ভুল মোবাইল নাম্বার। দয়া করে সঠিক নাম্বার দিন।';
+      } else if (err.code === 'auth/operation-not-allowed') {
+        errorMsg = 'Firebase Console থেকে Email/Password Authentication চালু করতে হবে।';
       }
       toast.error(errorMsg);
     } finally {
