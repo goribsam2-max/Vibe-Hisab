@@ -1,0 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  background-color: #F8F9FA;
+  color: #1F1F1F;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Hide scrollbars for slick look */
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}

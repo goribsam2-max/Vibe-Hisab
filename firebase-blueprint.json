@@ -1,0 +1,134 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Represents a registered shop owner or admin",
+      "type": "object",
+      "properties": {
+        "shopName": { "type": "string" },
+        "ownerName": { "type": "string" },
+        "mobile": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "status": { "type": "string", "enum": ["active", "banned"] },
+        "premiumUntil": { "type": "number", "description": "Timestamp" }
+      },
+      "required": ["shopName", "ownerName", "mobile", "role", "status"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "An item for sale in the shop",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "buyPrice": { "type": "number" },
+        "sellPrice": { "type": "number" },
+        "stock": { "type": "number" },
+        "createdAt": { "type": "object" }
+      },
+      "required": ["userId", "name", "buyPrice", "sellPrice", "stock", "createdAt"]
+    },
+    "Sale": {
+      "title": "Sale Transaction",
+      "description": "A recorded sale",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "productId": { "type": "string" },
+        "productName": { "type": "string" },
+        "quantity": { "type": "number" },
+        "buyPrice": { "type": "number" },
+        "sellPrice": { "type": "number" },
+        "totalAmount": { "type": "number" },
+        "profit": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["Cash", "bKash", "Nagad"] },
+        "timestamp": { "type": "object" }
+      },
+      "required": ["userId", "productName", "quantity", "buyPrice", "sellPrice", "totalAmount", "profit", "paymentMethod", "timestamp"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Shop customer",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "dueAmount": { "type": "number" },
+        "createdAt": { "type": "object" }
+      },
+      "required": ["userId", "name", "phone", "dueAmount", "createdAt"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "Shop expense",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "description": { "type": "string" },
+        "amount": { "type": "number" },
+        "timestamp": { "type": "object" }
+      },
+      "required": ["userId", "description", "amount", "timestamp"]
+    },
+    "PremiumRequest": {
+      "title": "Premium Request",
+      "description": "User request for premium access",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "shopName": { "type": "string" },
+        "mobile": { "type": "string" },
+        "planName": { "type": "string" },
+        "durationDays": { "type": "number" },
+        "amount": { "type": "number" },
+        "paymentMethod": { "type": "string" },
+        "transactionId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "timestamp": { "type": "object" }
+      },
+      "required": ["userId", "planName", "durationDays", "amount", "paymentMethod", "transactionId", "status", "timestamp"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Admin notification to users",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "timestamp": { "type": "object" }
+      },
+      "required": ["title", "message", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles and shop settings"
+    },
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Products managed by users"
+    },
+    "/sales/{saleId}": {
+      "schema": { "$ref": "#/entities/Sale" },
+      "description": "Sales records for users"
+    },
+    "/customers/{customerId}": {
+      "schema": { "$ref": "#/entities/Customer" },
+      "description": "Customer records for users"
+    },
+    "/expenses/{expenseId}": {
+      "schema": { "$ref": "#/entities/Expense" },
+      "description": "Expense records for users"
+    },
+    "/premiumRequests/{requestId}": {
+      "schema": { "$ref": "#/entities/PremiumRequest" },
+      "description": "Premium access requests"
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "Global notifications from admin"
+    }
+  }
+}

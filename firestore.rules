@@ -1,0 +1,194 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() { return request.auth != null; }
+    function isValidId(id) { return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    function isAdmin() {
+      // Allow specific admin email natively, or check user doc
+      return isSignedIn() && (
+        request.auth.token.email == 'admin@hisabnikash.com' ||
+        request.auth.token.email == '01747708843@hisabnikash.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+    
+    match /users/{userId} {
+      function isValidUser(data) {
+        return data.keys().hasAll(['shopName', 'ownerName', 'mobile', 'role', 'status']) &&
+               data.shopName is string && data.shopName.size() <= 100 &&
+               data.ownerName is string && data.ownerName.size() <= 100 &&
+               data.mobile is string && data.mobile.size() <= 20 &&
+               data.role in ['user', 'admin'] &&
+               data.status in ['active', 'banned'] &&
+               (data.get('premiumUntil', 0) is number);
+      }
+      
+      allow get: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      // No blanket list; list only by admin
+      allow list: if isAdmin();
+      
+      allow create: if isSignedIn() && 
+                    request.auth.uid == userId && 
+                    isValidId(userId) &&
+                    isValidUser(incoming()) && 
+                    (incoming().role == 'user' || (incoming().role == 'admin' && (request.auth.token.email == 'admin@hisabnikash.com' || request.auth.token.email == '01747708843@hisabnikash.com'))) &&
+                    incoming().status == 'active';
+                    
+      allow update: if isSignedIn() && (
+        (isAdmin() && isValidUser(incoming())) ||
+        (request.auth.uid == userId && 
+         isValidUser(incoming()) && 
+         // Normal user can only update shopName/ownerName
+         incoming().diff(existing()).affectedKeys().hasOnly(['shopName', 'ownerName']) &&
+         incoming().role == existing().role &&
+         incoming().status == existing().status &&
+         incoming().get('premiumUntil', 0) == existing().get('premiumUntil', 0)
+        )
+      );
+    }
+
+    match /products/{productId} {
+      function isValidProduct(data) {
+        return data.keys().hasAll(['userId', 'name', 'buyPrice', 'sellPrice', 'stock', 'createdAt']) &&
+               data.userId == request.auth.uid &&
+               data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+               data.buyPrice is number && data.buyPrice >= 0 &&
+               data.sellPrice is number && data.sellPrice >= 0 &&
+               data.stock is number && data.stock >= 0 &&
+               data.createdAt == request.time;
+      }
+      function isValidProductUpdate(data) {
+        return data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+               data.buyPrice is number && data.buyPrice >= 0 &&
+               data.sellPrice is number && data.sellPrice >= 0 &&
+               data.stock is number && data.stock >= 0;
+      }
+
+      allow get: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      allow create: if isSignedIn() && 
+                    isValidId(productId) &&
+                    isValidProduct(incoming()) &&
+                    exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
+                    
+      allow update: if isSignedIn() && 
+                    existing().userId == request.auth.uid &&
+                    isValidProductUpdate(incoming()) &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['name', 'buyPrice', 'sellPrice', 'stock']) &&
+                    exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
+                    
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    match /sales/{saleId} {
+      function isValidSale(data) {
+        return data.keys().hasAll(['userId', 'productId', 'productName', 'quantity', 'buyPrice', 'sellPrice', 'totalAmount', 'profit', 'paymentMethod', 'timestamp']) &&
+               data.userId == request.auth.uid &&
+               data.productId is string && data.productId.size() <= 128 &&
+               data.productName is string && data.productName.size() <= 100 &&
+               data.quantity is number && data.quantity > 0 &&
+               data.buyPrice is number && data.buyPrice >= 0 &&
+               data.sellPrice is number && data.sellPrice >= 0 &&
+               data.totalAmount is number && data.totalAmount >= 0 &&
+               data.profit is number &&
+               data.paymentMethod in ['Cash', 'bKash', 'Nagad'] &&
+               data.timestamp == request.time;
+      }
+
+      allow get: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      allow create: if isSignedIn() && 
+                    isValidId(saleId) &&
+                    isValidSale(incoming()) &&
+                    exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
+                    
+      // Allow deletion for history rollback
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+      allow update: if false;
+    }
+
+    match /customers/{customerId} {
+      function isValidCustomer(data) {
+        return data.keys().hasAll(['userId', 'name', 'phone', 'dueAmount', 'createdAt']) &&
+               data.userId == request.auth.uid &&
+               data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+               data.phone is string && data.phone.size() <= 20 &&
+               data.dueAmount is number &&
+               data.createdAt == request.time;
+      }
+      function isValidCustomerUpdate(data) {
+        return data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+               data.phone is string && data.phone.size() <= 20 &&
+               data.dueAmount is number;
+      }
+
+      allow get: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(customerId) && isValidCustomer(incoming());
+      allow update: if isSignedIn() && existing().userId == request.auth.uid && isValidCustomerUpdate(incoming()) && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'phone', 'dueAmount']);
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    match /expenses/{expenseId} {
+      function isValidExpense(data) {
+        return data.keys().hasAll(['userId', 'description', 'amount', 'timestamp']) &&
+               data.userId == request.auth.uid &&
+               data.description is string && data.description.size() > 0 && data.description.size() <= 200 &&
+               data.amount is number && data.amount > 0 &&
+               data.timestamp == request.time;
+      }
+      allow get: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(expenseId) && isValidExpense(incoming());
+      allow update, delete: if false; // Expenses are immutable for simplicity
+    }
+
+    match /premiumRequests/{requestId} {
+      function isValidPremiumRequest(data) {
+        return data.keys().hasAll(['userId', 'shopName', 'mobile', 'planName', 'durationDays', 'amount', 'paymentMethod', 'transactionId', 'status', 'timestamp']) &&
+               data.userId == request.auth.uid &&
+               data.planName is string &&
+               data.amount is number &&
+               data.paymentMethod is string &&
+               data.transactionId is string && data.transactionId.size() > 0 &&
+               data.status == 'pending' &&
+               data.timestamp == request.time;
+      }
+      allow get: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(requestId) && isValidPremiumRequest(incoming());
+      allow update: if isAdmin() && incoming().diff(existing()).affectedKeys().hasOnly(['status']);
+      allow delete: if false;
+    }
+
+    match /aboutConfig/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      function isValidNotification(data) {
+        return data.keys().hasAll(['title', 'message', 'timestamp']) &&
+               data.title is string && data.title.size() > 0 && data.title.size() <= 100 &&
+               data.message is string && data.message.size() > 0 && data.message.size() <= 500 &&
+               data.timestamp == request.time;
+      }
+      allow read: if isSignedIn();
+      allow create: if isAdmin() && isValidId(notificationId) && isValidNotification(incoming());
+      allow update, delete: if isAdmin();
+    }
+  }
+}
