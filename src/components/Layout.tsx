@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingCart, Clock, Shield, LogOut, Users, TrendingDown, Bell, User, Menu, X, Info } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Clock, Shield, LogOut, Users, TrendingDown, Bell, User, Menu, X, Info, HandCoins } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
@@ -12,6 +12,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'ড্যাশবোর্ড' },
+    { to: '/cash-match', icon: HandCoins, label: 'ক্যাশ মেলাই' },
     { to: '/pos', icon: ShoppingCart, label: 'বিক্রি করুন' },
     { to: '/products', icon: Package, label: 'পণ্য' },
     { to: '/customers', icon: Users, label: 'গ্রাহক' },
@@ -39,7 +40,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <aside className="hidden md:flex flex-col w-72 h-screen px-4 py-8 bg-[#F0F4F8] shrink-0 sticky top-0 justify-between">
         <div>
           <div className="flex items-center gap-4 mb-8 px-6">
-            <div className="w-12 h-12 bg-[#0B57D0] rounded-full flex items-center justify-center text-white font-bold text-xl shadow-md">H</div>
             <div>
               <h1 className="text-xl font-bold tracking-tight text-[#1F1F1F]">{user?.shopName}</h1>
               <p className="text-[13px] text-[#444746] font-medium">{user?.ownerName}</p>
@@ -79,11 +79,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-8 md:pl-2">
-        <div className="md:hidden flex items-center justify-between mb-6 px-2 pt-4">
+        <div className="md:hidden flex items-center justify-between mb-6 px-4 pt-4">
           <div className="flex items-center gap-3">
-             <div className="w-10 h-10 bg-[#0B57D0] rounded-full flex items-center justify-center text-white font-bold text-lg shadow-sm">H</div>
              <div>
-               <h1 className="text-lg font-bold tracking-tight text-[#1F1F1F]">{user?.shopName}</h1>
+               <h1 className="text-xl font-bold tracking-tight text-[#1F1F1F] leading-tight">{user?.shopName}</h1>
              </div>
           </div>
           <NavLink to="/notifications" className="w-10 h-10 bg-transparent rounded-full flex items-center justify-center text-[#444746] hover:bg-[#1F1F1F]/5 relative">

@@ -15,6 +15,7 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import POS from './pages/POS';
+import CashMatch from './pages/CashMatch';
 import History from './pages/History';
 import Admin from './pages/Admin';
 import Customers from './pages/Customers';
@@ -59,6 +60,7 @@ const AnimatedRoutes = () => {
         <Route path="/signup" element={<Signup />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/cash-match" element={<CashMatch />} />
           <Route path="/products" element={<Products />} />
           <Route path="/products/new" element={<AddProduct />} />
           <Route path="/products/:id" element={<ProductDetails />} />

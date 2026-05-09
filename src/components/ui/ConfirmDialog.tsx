@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '../ui';
 
@@ -21,7 +22,15 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
-  return (
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <React.Fragment>
@@ -29,7 +38,7 @@ export function ConfirmDialog({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-[#1F1F1F]/40 backdrop-blur-sm z-[999]"
+            className="fixed inset-0 bg-[#1F1F1F]/40 backdrop-blur-sm z-[999] overflow-y-auto"
             onClick={onCancel}
           />
           <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 pointer-events-none">
@@ -47,7 +56,7 @@ export function ConfirmDialog({
                 <Button variant="outline" size="sm" onClick={onCancel} className="px-5 rounded-full font-bold">
                   {cancelText}
                 </Button>
-                <Button variant="filled" size="sm" onClick={onConfirm} className="px-5 rounded-full font-bold">
+                <Button variant="filled" size="sm" onClick={onConfirm} className="px-5 rounded-full font-bold bg-[#B3261E] hover:bg-[#8C1D18] text-white">
                   {confirmText}
                 </Button>
               </div>
@@ -55,6 +64,7 @@ export function ConfirmDialog({
           </div>
         </React.Fragment>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

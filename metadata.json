@@ -1,6 +1,6 @@
 {
-  "name": "Remix: Hisab Nikash",
-  "description": "Store management and accounting app with Pixel UI, Firebase backend, and Admin Panel.",
+  "name": "Vibe Hisab",
+  "description": "Store management and accounting app with modern Material 3 expressive UI, including dashboard features to calculate pending balances, stock and profit/loss in real-time.",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }

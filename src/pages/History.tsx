@@ -9,6 +9,9 @@ import { PageTransition } from '../components/PageTransition';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
 
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+
 export default function History() {
   const { user } = useAuth();
   const [sales, setSales] = useState<any[]>([]);
@@ -65,30 +68,51 @@ export default function History() {
     return <Banknote size={18} />;
   }
 
-  const exportToCSV = () => {
+  const exportToPDF = () => {
     if (sales.length === 0) return toast.error('ডাউনলোড করার মত কোনো তথ্য নেই');
     
-    const headers = ['Date', 'Time', 'Product', 'Quantity', 'Payment Method', 'Total Amount', 'Profit'];
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFillColor(98, 90, 248);
+    doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.text('VIBE HISAB', 105, 20, { align: 'center' });
+    doc.setFontSize(14);
+    doc.text('Sales History Report', 105, 30, { align: 'center' });
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(12);
+    doc.text(`Shop Name: ${user?.shopName}`, 14, 50);
+    doc.text(`Generated Date: ${format(new Date(), 'dd MMM yyyy')}`, 14, 58);
+
+    const headers = [['Date', 'Product', 'Qty', 'Method', 'Total (TK)', 'Profit (TK)']];
     const rows = filteredSales.map(sale => [
-      sale.timestamp ? format(sale.timestamp.toDate(), 'dd MMM yyyy') : 'N/A',
-      sale.timestamp ? format(sale.timestamp.toDate(), 'hh:mm a') : 'N/A',
-      `"${sale.productName.replace(/"/g, '""')}"`,
-      sale.quantity,
+      sale.timestamp ? format(sale.timestamp.toDate(), 'dd MMM yy, hh:mm a') : 'N/A',
+      sale.productName,
+      sale.quantity.toString(),
       sale.paymentMethod,
-      sale.totalAmount,
-      sale.profit
+      sale.totalAmount.toLocaleString(),
+      sale.profit.toLocaleString()
     ]);
     
-    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `Sales_Export_${format(new Date(), 'yyyy-MM-dd')}.csv`;
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success('ডাউনলোড শুরু হয়েছে');
+    autoTable(doc, {
+      startY: 65,
+      head: headers,
+      body: rows,
+      theme: 'grid',
+      headStyles: { fillColor: [11, 87, 208], textColor: 255 },
+      styles: { fontSize: 10, cellPadding: 4 },
+    });
+
+    const pageCount = (doc as any).internal.getNumberOfPages();
+    doc.setFontSize(10);
+    doc.setTextColor(150, 150, 150);
+    doc.text('Powered by Vibe Hisab Platform', 105, doc.internal.pageSize.height - 10, { align: 'center' });
+
+    doc.save(`Sales_History_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    toast.success('পিডিএফ ডাউনলোড শুরু হয়েছে');
   };
 
   const filteredSales = sales.filter(s => s.productName.toLowerCase().includes(search.toLowerCase()));
@@ -121,8 +145,8 @@ export default function History() {
                  onChange={e => setSearch(e.target.value)}
                />
              </div>
-             <button onClick={exportToCSV} className="h-12 bg-[#D3E3FD]/20 text-[#0B57D0] px-4 rounded-xl font-bold hover:bg-[#D3E3FD]/40 transition-colors flex items-center justify-center gap-2">
-                <Download size={20} /> পিডিএফ/এক্সেল ডাইউনলোড
+             <button onClick={exportToPDF} className="h-12 bg-[#D3E3FD]/20 text-[#0B57D0] px-4 rounded-xl font-bold hover:bg-[#D3E3FD]/40 transition-colors flex items-center justify-center gap-2">
+                <Download size={20} /> পিডিএফ ডাউনলোড
              </button>
            </div>
         </div>

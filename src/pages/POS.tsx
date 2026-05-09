@@ -14,9 +14,16 @@ export default function POS() {
   const [search, setSearch] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [sellPriceOverride, setSellPriceOverride] = useState<number | ''>('');
   const [paymentMethod, setPaymentMethod] = useState<'Cash' | 'bKash' | 'Nagad'>('Cash');
   const [loading, setLoading] = useState(false);
   const [lastSaleReceipt, setLastSaleReceipt] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (selectedProduct) {
+      setSellPriceOverride(selectedProduct.sellPrice);
+    }
+  }, [selectedProduct]);
 
   useEffect(() => {
     if (!user) return;
@@ -40,7 +47,8 @@ export default function POS() {
     if (quantity > selectedProduct.stock) return toast.error('Not enough stock');
 
     setLoading(true);
-    const totalAmount = selectedProduct.sellPrice * quantity;
+    const finalSellPrice = Number(sellPriceOverride) || 0;
+    const totalAmount = finalSellPrice * quantity;
     const totalBuyPrice = selectedProduct.buyPrice * quantity;
     const profit = totalAmount - totalBuyPrice;
 
@@ -51,7 +59,7 @@ export default function POS() {
         productName: selectedProduct.name,
         quantity,
         buyPrice: selectedProduct.buyPrice,
-        sellPrice: selectedProduct.sellPrice,
+        sellPrice: finalSellPrice,
         totalAmount,
         profit,
         paymentMethod,
@@ -224,10 +232,21 @@ export default function POS() {
             <div className="flex-1 flex flex-col">
               <div className="bg-[#F0F4F8] p-5 rounded-[1.5rem] mb-6">
                 <h4 className="font-bold text-[#1F1F1F] text-[17px] mb-1 leading-tight">{selectedProduct.name}</h4>
-                <p className="text-[#444746] font-bold">৳ {selectedProduct.sellPrice} / ইউনিট</p>
+                <p className="text-[#444746] font-bold">ক্রয় মূল্য: ৳ {selectedProduct.buyPrice}</p>
               </div>
 
               <div className="space-y-6 mb-6">
+                <div>
+                  <label className="text-[14px] font-bold text-[#444746] block mb-3 pl-1">বিক্রয় মূল্য (প্রতি ইউনিট)</label>
+                  <input 
+                    type="number"
+                    value={sellPriceOverride}
+                    onChange={(e) => setSellPriceOverride(e.target.value === '' ? '' : Number(e.target.value))}
+                    className="w-full h-14 px-5 rounded-[1.25rem] bg-[#F0F4F8] border-2 border-transparent text-[#1F1F1F] font-bold focus:outline-none focus:bg-white focus:border-[#0B57D0]/30 focus:shadow-[0_0_0_4px_rgba(11,87,208,0.1)] transition-all mb-2 text-lg"
+                    placeholder="বিক্রয় মূল্য দিন"
+                  />
+                </div>
+
                 <div>
                   <label className="text-[14px] font-bold text-[#444746] block mb-3 pl-1">পরিমাণ</label>
                   <div className="flex items-center gap-4 bg-[#F0F4F8] p-2 rounded-full w-max mx-auto shadow-inner shadow-black/5">
@@ -265,7 +284,7 @@ export default function POS() {
               <div className="mt-auto">
                 <div className="flex justify-between items-end mb-4 bg-[#1F1F1F] text-white p-5 rounded-[1.5rem] shadow-md">
                    <div className="text-[#EAEEEF] font-bold">মোট টাকা</div>
-                   <div className="text-[28px] font-black leading-none">৳ {selectedProduct.sellPrice * quantity}</div>
+                   <div className="text-[28px] font-black leading-none">৳ {(Number(sellPriceOverride) || 0) * quantity}</div>
                 </div>
                 
                 <Button 

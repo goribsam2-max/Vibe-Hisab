@@ -1,11 +1,22 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+
+// Enable offline persistence
+enableIndexedDbPersistence(db).catch((err) => {
+  if (err.code == 'failed-precondition') {
+    // Multiple tabs open
+    console.warn("Offline persistence failed: Multiple tabs open");
+  } else if (err.code == 'unimplemented') {
+    // Browser doesn't support
+    console.warn("Offline persistence not supported by browser");
+  }
+});
 
 export enum OperationType {
   CREATE = 'create',

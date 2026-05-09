@@ -37,7 +37,7 @@ export default function Notifications() {
 
   return (
     <PageTransition>
-      <div className="space-y-4 max-w-2xl mx-auto">
+      <div className="space-y-4 max-w-2xl mx-auto min-h-[80vh] pb-24">
         <h2 className="text-2xl font-bold text-[#1F1F1F] mb-6 flex items-center gap-3">
           <Bell className="text-[#0B57D0]" /> System Notifications
         </h2>

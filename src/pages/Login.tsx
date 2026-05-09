@@ -71,9 +71,8 @@ export default function Login() {
       <div className="min-h-screen bg-[#F0F4F8] flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="text-center mb-10">
-            <div className="w-24 h-24 bg-[#0B57D0] rounded-full flex items-center justify-center text-white font-bold text-5xl mx-auto mb-6 shadow-lg shadow-[#0B57D0]/20">H</div>
-            <h1 className="text-3xl font-bold tracking-tight text-[#1F1F1F] mb-3">স্বাগতম</h1>
-            <p className="text-[#444746] text-lg">আপনার শপের অ্যাকাউন্টে লগইন করুন</p>
+            <h1 className="text-4xl font-black tracking-tight text-[#1F1F1F] mb-3 font-sans">Vibe Hisab</h1>
+            <p className="text-[#444746] text-lg font-medium">আপনার শপের অ্যাকাউন্টে লগইন করুন</p>
           </div>
           
           <Card className="shadow-lg shadow-black/5">
